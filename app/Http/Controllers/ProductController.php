@@ -7,7 +7,6 @@ use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 
 /**
  * @OA\Tag(
@@ -114,7 +113,6 @@ class ProductController extends Controller
         $validated = $request->validated();
 
         $product = Product::create([
-            'id' => Str::uuid(),
             'title' => $validated['title'],
             'handle' => $validated['handle'],
             'price' => $validated['price'],

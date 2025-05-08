@@ -7,7 +7,6 @@ use App\Http\Requests\Variant\UpdateVariantRequest;
 use App\Models\Variant;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 
 /**
  * @OA\Tag(
@@ -136,7 +135,6 @@ class VariantController extends Controller
         $validated = $request->validated();
 
         $variant = Variant::create([
-            'id' => Str::uuid(),
             'product_id' => $productId,
             'handle' => $validated['handle'],
             'price' => $validated['price'],

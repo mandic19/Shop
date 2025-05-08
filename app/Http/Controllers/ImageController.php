@@ -7,7 +7,6 @@ use App\Http\Requests\Image\StoreImageRequest;
 use App\Http\Requests\Image\UpdateImageRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 
 /**
  * @OA\Tag(
@@ -97,7 +96,6 @@ class ImageController extends Controller
         $validated = $request->validated();
 
         $image = Image::create([
-            'id' => Str::uuid(),
             'url' => $validated['url']
         ]);
 
