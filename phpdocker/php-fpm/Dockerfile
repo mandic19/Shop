@@ -8,19 +8,18 @@ RUN apt-get update \
         php8.4-bcmath \
         cron \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* \
+    && mkdir -p /etc/cron.d \
+    && touch /var/log/cron.log
 
-# Copy crontab file to the cron.d directory
+# Copy crontab file and startup script
 COPY crontab /etc/cron.d/crontab
+COPY start.sh /start.sh
 
-# Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/crontab
-
-# Apply cron job
-RUN crontab /etc/cron.d/crontab
-
-# Create the log file to be able to run tail
-RUN touch /var/log/cron.log
+# Setup permissions
+RUN chmod 0644 /etc/cron.d/crontab \
+    && crontab /etc/cron.d/crontab \
+    && chmod +x /start.sh
 
 # Run the command on container startup
-CMD cron && tail -f /var/log/cron.log
+CMD ["/start.sh"]
