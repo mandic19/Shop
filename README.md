@@ -68,13 +68,14 @@ The API documentation is available through Swagger UI at:
 http://api.shop.local/api/documentation
 ```
 
-## Product Seeder
+## Shop Seeder
 
 The application includes a seeder to simulate daily third-party API updates.
 
 ### Seeder Command
 
 ```bash
+docker exec -it shop-php-fpm bash
 php artisan db:seed:shop
 ```
 
