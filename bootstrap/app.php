@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('db:seed:shop')
-            ->everyFiveMinutes()
+            ->daily()
             ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware) {
