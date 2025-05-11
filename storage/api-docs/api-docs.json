@@ -250,6 +250,102 @@
                 }
             }
         },
+        "/orders": {
+            "post": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Create a new order",
+                "description": "Creates a new order with the specified items",
+                "operationId": "storeOrder",
+                "requestBody": {
+                    "description": "Order creation data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreOrderRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Order created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "order": {
+                                            "$ref": "#/components/schemas/Order"
+                                        },
+                                        "order_items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/OrderItem"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The items field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product or Variant not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Attempts",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/products": {
             "get": {
                 "tags": [
@@ -1394,6 +1490,49 @@
                 },
                 "type": "object"
             },
+            "StoreOrderItemRequest": {
+                "required": [
+                    "product_id",
+                    "quantity"
+                ],
+                "properties": {
+                    "product_id": {
+                        "description": "Unique identifier of the product",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "variant_id": {
+                        "description": "Unique identifier of the product variant",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "650e8400-e29b-41d4-a716-446655440000",
+                        "nullable": true
+                    },
+                    "quantity": {
+                        "description": "Quantity of the product to be ordered",
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 2
+                    }
+                },
+                "type": "object"
+            },
+            "StoreOrderRequest": {
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "description": "List of order items",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StoreOrderItemRequest"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "StoreProductRequest": {
                 "required": [
                     "title",
@@ -1575,6 +1714,125 @@
                 },
                 "type": "object"
             },
+            "OrderItem": {
+                "required": [
+                    "id",
+                    "order_id",
+                    "product_id",
+                    "quantity",
+                    "unit_price",
+                    "total_price"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "Unique identifier for the order item",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "750e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "order_id": {
+                        "description": "Identifier of the parent order",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "850e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "product_id": {
+                        "description": "Identifier of the ordered product",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "variant_id": {
+                        "description": "Identifier of the product variant (if applicable)",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "650e8400-e29b-41d4-a716-446655440000",
+                        "nullable": true
+                    },
+                    "quantity": {
+                        "description": "Quantity of the product ordered",
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "unit_price": {
+                        "description": "Price per unit of the product",
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 99.99
+                    },
+                    "total_price": {
+                        "description": "Total price for this order item (quantity * unit_price)",
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 199.98
+                    },
+                    "created_at": {
+                        "description": "Timestamp when the order item was created",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-05-07T14:30:00Z"
+                    },
+                    "updated_at": {
+                        "description": "Timestamp when the order item was last updated",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-05-07T14:30:00Z"
+                    },
+                    "product": {
+                        "$ref": "#/components/schemas/Product"
+                    },
+                    "variant": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Variant"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "The product variant details (if applicable)"
+                    }
+                },
+                "type": "object"
+            },
+            "Order": {
+                "required": [
+                    "id",
+                    "total_amount"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "Unique identifier for the order",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "850e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "total_amount": {
+                        "description": "Total amount of the order",
+                        "type": "number",
+                        "format": "decimal",
+                        "example": 299.97
+                    },
+                    "created_at": {
+                        "description": "Timestamp when the order was created",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-05-07T14:30:00Z"
+                    },
+                    "updated_at": {
+                        "description": "Timestamp when the order was last updated",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-05-07T14:30:00Z"
+                    },
+                    "order_items": {
+                        "description": "List of items in the order",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OrderItem"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "Product": {
                 "required": [
                     "id",
@@ -1743,6 +2001,10 @@
         {
             "name": "Images",
             "description": "API Endpoints for managing images"
+        },
+        {
+            "name": "Orders",
+            "description": "API Endpoints for orders"
         },
         {
             "name": "Products",
