@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProductController;
@@ -34,4 +35,7 @@ Route::middleware(['api', 'throttle:3,1'])->group(function () {
     Route::post('/variant-images', [VariantImageController::class, 'store']);
     Route::put('/variant-images/{id}', [VariantImageController::class, 'update']);
     Route::delete('/variant-images/{id}', [VariantImageController::class, 'destroy']);
+
+    // Orders Routes
+    Route::post('/orders', [OrderController::class, 'store']);
 });
