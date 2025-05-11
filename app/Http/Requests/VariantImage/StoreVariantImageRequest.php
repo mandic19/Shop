@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * @OA\Schema(
- *     schema="CreateVariantImageRequest",
+ *     schema="StoreVariantImageRequest",
  *     type="object",
  *     title="Create Variant Image Request",
  *     required={"variant_id", "image_id"},

@@ -256,9 +256,19 @@
                     "Products"
                 ],
                 "summary": "Get paginated list of products",
-                "description": "Returns a paginated list of all products with their primary image",
+                "description": "Returns a simplified paginated list of all products with their primary image",
                 "operationId": "getProductsList",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
                     {
                         "name": "per_page",
                         "in": "query",
@@ -267,6 +277,21 @@
                         "schema": {
                             "type": "integer",
                             "default": 15
+                        }
+                    },
+                    {
+                        "name": "with",
+                        "in": "query",
+                        "description": "Additional relationships to include",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "image"
+                                ]
+                            }
                         }
                     }
                 ],
@@ -289,17 +314,13 @@
                                                     "type": "integer",
                                                     "example": 1
                                                 },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "example": 3
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
                                                 },
                                                 "per_page": {
                                                     "type": "integer",
                                                     "example": 15
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 45
                                                 }
                                             },
                                             "type": "object"
@@ -310,8 +331,8 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
+                    "429": {
+                        "description": "Too Many Attempts"
                     }
                 }
             },
@@ -383,6 +404,9 @@
                     },
                     "401": {
                         "description": "Unauthorized"
+                    },
+                    "429": {
+                        "description": "Too Many Attempts"
                     }
                 }
             }
@@ -426,8 +450,8 @@
                     "404": {
                         "description": "Product not found"
                     },
-                    "401": {
-                        "description": "Unauthorized"
+                    "429": {
+                        "description": "Too Many Attempts"
                     }
                 }
             },
@@ -513,6 +537,9 @@
                     },
                     "401": {
                         "description": "Unauthorized"
+                    },
+                    "429": {
+                        "description": "Too Many Attempts"
                     }
                 }
             },
@@ -544,29 +571,22 @@
                     },
                     "401": {
                         "description": "Unauthorized"
+                    },
+                    "429": {
+                        "description": "Too Many Attempts"
                     }
                 }
             }
         },
-        "/products/{product_id}/variants": {
+        "/varinats": {
             "get": {
                 "tags": [
                     "Variants"
                 ],
-                "summary": "Get a paginated list of variants for a product",
-                "description": "Returns a paginated list of variants belonging to a specific product",
-                "operationId": "listProductVariants",
+                "summary": "Get a paginated list of variants",
+                "description": "Returns a paginated list of variants",
+                "operationId": "listVariants",
                 "parameters": [
-                    {
-                        "name": "product_id",
-                        "in": "path",
-                        "description": "ID of the product",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
                     {
                         "name": "per_page",
                         "in": "query",
@@ -585,6 +605,15 @@
                         "schema": {
                             "type": "integer",
                             "default": 1
+                        }
+                    },
+                    {
+                        "name": "product_id",
+                        "in": "query",
+                        "description": "Filter variants by product ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 ],
@@ -607,17 +636,13 @@
                                                     "type": "integer",
                                                     "example": 1
                                                 },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "example": 5
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
                                                 },
                                                 "per_page": {
                                                     "type": "integer",
-                                                    "example": 20
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 100
+                                                    "example": 15
                                                 }
                                             },
                                             "type": "object"
@@ -628,11 +653,13 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Product not found"
+                    "429": {
+                        "description": "Too Many Attempts"
                     }
                 }
-            },
+            }
+        },
+        "/products/{product_id}/variants": {
             "post": {
                 "tags": [
                     "Variants"
@@ -870,18 +897,39 @@
                 }
             }
         },
-        "/api/variants/{variant_id}/images": {
+        "/variant-images": {
             "get": {
                 "tags": [
                     "Variant Images"
                 ],
                 "summary": "List variant images",
-                "operationId": "23c7bfe6831b66bf9ade38b4f4656264",
+                "operationId": "524578b4eddd6f3766b4d3dc43c4ad8d",
                 "parameters": [
                     {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
                         "name": "variant_id",
-                        "in": "path",
-                        "required": true,
+                        "in": "query",
+                        "description": "Filter images by variant ID",
+                        "required": false,
                         "schema": {
                             "type": "string"
                         }
@@ -889,10 +937,42 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful response"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/VariantImage"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "has_more_pages": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
-                    "404": {
-                        "description": "Variant not found"
+                    "429": {
+                        "description": "Too Many Attempts"
                     }
                 }
             },
@@ -901,34 +981,73 @@
                     "Variant Images"
                 ],
                 "summary": "Create a new variant image",
-                "operationId": "45156ae8ceeb2386ccc175f0efacee92",
-                "parameters": [
-                    {
-                        "name": "variant_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                "operationId": "2426416810bd0b46dc93aecc9133b40a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreVariantImageRequest"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "201": {
-                        "description": "Variant image created successfully"
+                        "description": "Variant image created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VariantImage"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Variant not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Variant not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
-        "/api/variant-images/{id}": {
+        "/variant-images/{id}": {
             "get": {
                 "tags": [
                     "Variant Images"
                 ],
                 "summary": "Get a specific variant image",
-                "operationId": "ccb555f130b4934c9ab785bab1f0e07f",
+                "operationId": "13e3a3ef18d192cab6968e30c9effd01",
                 "parameters": [
                     {
                         "name": "id",
@@ -941,10 +1060,28 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful response"
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Variant image not found"
+                        "description": "Variant image not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Variant image not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -953,7 +1090,7 @@
                     "Variant Images"
                 ],
                 "summary": "Update a variant image",
-                "operationId": "5eb82bc7f9f67426b93af16bfbd1917e",
+                "operationId": "ca1ad978fc9bca084c2792d08c1de512",
                 "parameters": [
                     {
                         "name": "id",
@@ -964,15 +1101,61 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateVariantImageRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Variant image updated successfully"
+                        "description": "Variant image updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VariantImage"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Variant image not found"
+                        "description": "Variant image not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Variant image not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -981,7 +1164,7 @@
                     "Variant Images"
                 ],
                 "summary": "Delete a variant image",
-                "operationId": "12f74407eb7d1f9af23c5e5e9a8311d4",
+                "operationId": "48f3f85deeb64531681e2637c9f15054",
                 "parameters": [
                     {
                         "name": "id",
@@ -994,10 +1177,36 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "Variant image deleted successfully"
+                        "description": "Variant image deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Variant image deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Variant image not found"
+                        "description": "Variant image not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Variant image not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1097,7 +1306,8 @@
             "StoreVariantRequest": {
                 "required": [
                     "handle",
-                    "price"
+                    "price",
+                    "product_id"
                 ],
                 "properties": {
                     "handle": {
@@ -1110,6 +1320,11 @@
                         "type": "number",
                         "format": "decimal",
                         "example": 219.99
+                    },
+                    "product_id": {
+                        "description": "Product identifier",
+                        "type": "string",
+                        "format": "uuid"
                     }
                 },
                 "type": "object"
@@ -1130,7 +1345,7 @@
                 },
                 "type": "object"
             },
-            "CreateVariantImageRequest": {
+            "StoreVariantImageRequest": {
                 "title": "Create Variant Image Request",
                 "required": [
                     "variant_id",
@@ -1272,6 +1487,54 @@
                         "items": {
                             "$ref": "#/components/schemas/Variant"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "VariantImage": {
+                "title": "Variant Image",
+                "description": "A model representing an image associated with a variant",
+                "properties": {
+                    "id": {
+                        "description": "The unique identifier of the variant image",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "variant_id": {
+                        "description": "The identifier of the associated variant",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "123e4567-e89b-12d3-a456-426614174001"
+                    },
+                    "image_id": {
+                        "description": "The identifier of the associated image",
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "123e4567-e89b-12d3-a456-426614174002"
+                    },
+                    "position": {
+                        "description": "The display order position of the image",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "created_at": {
+                        "description": "The date and time when the record was created",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-05-01T12:00:00Z"
+                    },
+                    "updated_at": {
+                        "description": "The date and time when the record was last updated",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-05-01T12:00:00Z"
+                    },
+                    "image": {
+                        "$ref": "#/components/schemas/Image"
+                    },
+                    "variant": {
+                        "$ref": "#/components/schemas/Variant"
                     }
                 },
                 "type": "object"
