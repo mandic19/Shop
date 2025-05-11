@@ -22,16 +22,16 @@ Route::middleware(['api', 'throttle:3,1'])->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
     // Variant Routes
-    Route::get('/products/{product_id}/variants', [VariantController::class, 'index']);
+    Route::get('/variants', [VariantController::class, 'index']);
     Route::post('/products/{product_id}/variants', [VariantController::class, 'store']);
     Route::get('/variants/{id}', [VariantController::class, 'show']);
     Route::put('/variants/{id}', [VariantController::class, 'update']);
     Route::delete('/variants/{id}', [VariantController::class, 'destroy']);
 
     // Variant Image Routes
-    Route::get('/variants/{variant_id}/images', [VariantImageController::class, 'index']);
+    Route::get('/variant-images', [VariantImageController::class, 'index']);
     Route::get('/variant-images/{id}', [VariantImageController::class, 'show']);
-    Route::post('/variants/{variant_id}/images', [VariantImageController::class, 'store']);
+    Route::post('/variant-images', [VariantImageController::class, 'store']);
     Route::put('/variant-images/{id}', [VariantImageController::class, 'update']);
     Route::delete('/variant-images/{id}', [VariantImageController::class, 'destroy']);
 });
