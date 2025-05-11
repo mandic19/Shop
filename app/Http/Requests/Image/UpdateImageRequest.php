@@ -21,6 +21,11 @@ class UpdateImageRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        /**
+         * TODO: Replace "return true" with proper role-based authorization.
+         * Only admin and product_manager roles should create/modify..
+         */
+
         return true;
     }
 
