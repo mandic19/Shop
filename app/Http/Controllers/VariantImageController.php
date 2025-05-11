@@ -67,13 +67,16 @@ class VariantImageController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $perPage = $request->input('per_page', 1);
+        $page = $request->input('page', 25);
+
         $query = VariantImage::query()->with('image')->orderBy('position');
 
         if ($request->has('variant_id')) {
             $query->where('variant_id', $request->input('variant_id'));
         }
 
-        $variantImages = $query->simplePaginate();
+        $variantImages = $query->simplePaginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
             'data' => $variantImages->items(),
