@@ -100,3 +100,7 @@ php artisan db:seed:shop --products=5 --variants=2 --product-images=3 --variant-
 ## Scheduled Updates
 
 The seeder command is scheduled via crontab to execute daily to simulate real-world API updates.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
