@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\VariantImage\UpdateVariantImageRequest;
 use App\Http\Requests\VariantImage\StoreVariantImageRequest;
-use App\Models\Variant;
 use App\Models\VariantImage;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
@@ -19,40 +19,74 @@ class VariantImageController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/variants/{variant_id}/images",
+     *     path="/variant-images",
      *     summary="List variant images",
      *     tags={"Variant Images"},
      *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=20)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
      *         name="variant_id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="string")
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="string"),
+     *         description="Filter images by variant ID"
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful response"
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/VariantImage")),
+     *             @OA\Property(
+     *                 property="meta",
+     *                 type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="has_more_pages", type="boolean", example=true),
+     *                 @OA\Property(property="per_page", type="integer", example=20)
+     *             )
+     *         )
      *     ),
      *     @OA\Response(
-     *         response=404,
-     *         description="Variant not found"
+     *         response=429,
+     *         description="Too Many Attempts"
      *     )
      * )
      */
-    public function index(string $variantId): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $variant = Variant::findOrFail($variantId);
+        $query = VariantImage::query()->with('image')->orderBy('position');
 
-        $variantImages = VariantImage::where('variant_id', $variantId)
-            ->with('image')
-            ->orderBy('position')
-            ->get();
+        if ($request->has('variant_id')) {
+            $query->where('variant_id', $request->input('variant_id'));
+        }
 
-        return response()->json($variantImages);
+        $variantImages = $query->simplePaginate();
+
+        return response()->json([
+            'data' => $variantImages->items(),
+            'meta' => [
+                'current_page' => $variantImages->currentPage(),
+                'has_more_pages' => $variantImages->hasMorePages(),
+                'per_page' => $variantImages->perPage(),
+            ]
+        ]);
     }
 
     /**
      * @OA\Get(
-     *     path="/api/variant-images/{id}",
+     *     path="/variant-images/{id}",
      *     summary="Get a specific variant image",
      *     tags={"Variant Images"},
      *     @OA\Parameter(
@@ -63,11 +97,15 @@ class VariantImageController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful response"
+     *         description="Successful response",
+     *         @OA\JsonContent()
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Variant image not found"
+     *         description="Variant image not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Variant image not found")
+     *         )
      *     )
      * )
      */
@@ -80,31 +118,42 @@ class VariantImageController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/variants/{variant_id}/images",
+     *     path="/variant-images",
      *     summary="Create a new variant image",
      *     tags={"Variant Images"},
-     *     @OA\Parameter(
-     *         name="variant_id",
-     *         in="path",
+     *     @OA\RequestBody(
      *         required=true,
-     *         @OA\Schema(type="string")
+     *         @OA\JsonContent(ref="#/components/schemas/StoreVariantImageRequest")
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="Variant image created successfully"
+     *         description="Variant image created successfully",
+     *         @OA\JsonContent(ref="#/components/schemas/VariantImage")
      *     ),
      *     @OA\Response(
      *         response=422,
-     *         description="Validation error"
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Variant not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Variant not found")
+     *         )
      *     )
      * )
      */
-    public function store(StoreVariantImageRequest $request, string $variantId): JsonResponse
+    public function store(StoreVariantImageRequest $request): JsonResponse
     {
-        $variant = Variant::findOrFail($variantId);
-
         $validatedData = $request->validated();
-        $validatedData['variant_id'] = $variantId;
+        $variantId = $validatedData['variant_id'];
 
         // Determine the next position
         $maxPosition = VariantImage::where('variant_id', $variantId)->max('position') ?? 0;
@@ -117,7 +166,7 @@ class VariantImageController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/variant-images/{id}",
+     *     path="/variant-images/{id}",
      *     summary="Update a variant image",
      *     tags={"Variant Images"},
      *     @OA\Parameter(
@@ -126,17 +175,32 @@ class VariantImageController extends Controller
      *         required=true,
      *         @OA\Schema(type="string")
      *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/UpdateVariantImageRequest")
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Variant image updated successfully"
+     *         description="Variant image updated successfully",
+     *         @OA\JsonContent(ref="#/components/schemas/VariantImage")
      *     ),
      *     @OA\Response(
      *         response=422,
-     *         description="Validation error"
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object"
+     *             )
+     *         )
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Variant image not found"
+     *         description="Variant image not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Variant image not found")
+     *         )
      *     )
      * )
      */
@@ -153,7 +217,7 @@ class VariantImageController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/variant-images/{id}",
+     *     path="/variant-images/{id}",
      *     summary="Delete a variant image",
      *     tags={"Variant Images"},
      *     @OA\Parameter(
@@ -164,11 +228,17 @@ class VariantImageController extends Controller
      *     ),
      *     @OA\Response(
      *         response=204,
-     *         description="Variant image deleted successfully"
+     *         description="Variant image deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Variant image deleted successfully")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Variant image not found"
+     *         description="Variant image not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Variant image not found")
+     *         )
      *     )
      * )
      */
