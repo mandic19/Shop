@@ -20,15 +20,32 @@ class ProductController extends Controller
      * @OA\Get(
      *     path="/products",
      *     summary="Get paginated list of products",
-     *     description="Returns a paginated list of all products with their primary image",
+     *     description="Returns a simplified paginated list of all products with their primary image",
      *     operationId="getProductsList",
      *     tags={"Products"},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
      *         description="Number of items per page",
      *         required=false,
      *         @OA\Schema(type="integer", default=15)
+     *     ),
+     *     @OA\Parameter(
+     *         name="with",
+     *         in="query",
+     *         description="Additional relationships to include",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="array",
+     *             @OA\Items(type="string", enum={"image"})
+     *         )
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -40,30 +57,46 @@ class ProductController extends Controller
      *                 property="meta",
      *                 type="object",
      *                 @OA\Property(property="current_page", type="integer", example=1),
-     *                 @OA\Property(property="last_page", type="integer", example=3),
-     *                 @OA\Property(property="per_page", type="integer", example=15),
-     *                 @OA\Property(property="total", type="integer", example=45)
+     *                 @OA\Property(property="has_more_pages", type="boolean", example=true),
+     *                 @OA\Property(property="per_page", type="integer", example=15)
      *             )
      *         )
      *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 15);
-        $products = Product::query()->paginate($perPage);
+        $perPage = $request->input('per_page', 1);
+        $page = $request->input('page', 25);
+
+        $with = $request->input('with', []);
+        $allowedWith = ['image'];
+
+        // Validate and filter 'with' relationships
+        $validWith = is_array($with)
+            ? array_intersect($with, $allowedWith)
+            : [];
+
+        $productsQuery = Product::query();
+
+        // Add eager loading based on 'with' parameter
+        if (!empty($validWith)) {
+            $productsQuery->with($validWith);
+        }
+
+        $products = $productsQuery->simplePaginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
             'data' => $products->items(),
             'meta' => [
                 'current_page' => $products->currentPage(),
-                'last_page' => $products->lastPage(),
+                'has_more_pages' => $products->hasMorePages(),
                 'per_page' => $products->perPage(),
-                'total' => $products->total()
             ]
         ]);
     }
@@ -103,8 +136,9 @@ class ProductController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
@@ -149,11 +183,15 @@ class ProductController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Product not found"
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Product not found.")
+     *         )
      *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
@@ -196,7 +234,10 @@ class ProductController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Product not found"
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Product not found.")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=422,
@@ -212,8 +253,9 @@ class ProductController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
@@ -250,11 +292,15 @@ class ProductController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Product not found"
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Product not found.")
+     *         )
      *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */

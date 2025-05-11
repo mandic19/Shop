@@ -60,7 +60,8 @@ class VariantImageController extends Controller
      *     ),
      *     @OA\Response(
      *         response=429,
-     *         description="Too Many Attempts"
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
@@ -106,6 +107,11 @@ class VariantImageController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Variant image not found")
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
@@ -147,6 +153,11 @@ class VariantImageController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Variant not found")
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
@@ -201,6 +212,11 @@ class VariantImageController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Variant image not found")
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
@@ -239,6 +255,11 @@ class VariantImageController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Variant image not found")
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */

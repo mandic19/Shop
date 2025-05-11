@@ -18,18 +18,11 @@ class VariantController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/products/{product_id}/variants",
-     *     summary="Get a paginated list of variants for a product",
-     *     description="Returns a paginated list of variants belonging to a specific product",
-     *     operationId="listProductVariants",
+     *     path="/variants",
+     *     summary="Get a paginated list of variants",
+     *     description="Returns a paginated list of variants",
+     *     operationId="listVariants",
      *     tags={"Variants"},
-     *     @OA\Parameter(
-     *         name="product_id",
-     *         in="path",
-     *         description="ID of the product",
-     *         required=true,
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
@@ -44,6 +37,13 @@ class VariantController extends Controller
      *         required=false,
      *         @OA\Schema(type="integer", default=1)
      *     ),
+     *     @OA\Parameter(
+     *         name="product_id",
+     *         in="query",
+     *         description="Filter variants by product ID",
+     *         required=false,
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
@@ -54,49 +54,48 @@ class VariantController extends Controller
      *                 property="meta",
      *                 type="object",
      *                 @OA\Property(property="current_page", type="integer", example=1),
-     *                 @OA\Property(property="last_page", type="integer", example=5),
-     *                 @OA\Property(property="per_page", type="integer", example=20),
-     *                 @OA\Property(property="total", type="integer", example=100)
+     *                 @OA\Property(property="has_more_pages", type="boolean", example=true),
+     *                 @OA\Property(property="per_page", type="integer", example=15)
      *             )
      *         )
      *     ),
      *     @OA\Response(
-     *         response=404,
-     *         description="Product not found"
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
-    public function index(Request $request, $productId)
+    public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 20);
-        $variants = Variant::where('product_id', $productId)
-            ->paginate($perPage);
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', 25);
+
+        $query = Variant::query();
+
+        if ($request->has('product_id')) {
+            $query->where('product_id', $request->input('product_id'));
+        }
+
+        $variants = $query->simplePaginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
             'data' => $variants->items(),
             'meta' => [
                 'current_page' => $variants->currentPage(),
-                'last_page' => $variants->lastPage(),
+                'has_more_pages' => $variants->hasMorePages(),
                 'per_page' => $variants->perPage(),
-                'total' => $variants->total()
             ]
         ]);
     }
 
     /**
      * @OA\Post(
-     *     path="/products/{product_id}/variants",
+     *     path="/variants",
      *     summary="Create a new variant",
-     *     description="Creates a new variant for a specific product",
+     *     description="Creates a new variant",
      *     operationId="storeVariant",
      *     tags={"Variants"},
-     *     @OA\Parameter(
-     *         name="product_id",
-     *         in="path",
-     *         description="ID of the product",
-     *         required=true,
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
      *     @OA\RequestBody(
      *         required=true,
      *         description="Variant data",
@@ -112,10 +111,6 @@ class VariantController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=404,
-     *         description="Product not found"
-     *     ),
-     *     @OA\Response(
      *         response=422,
      *         description="Validation error",
      *         @OA\JsonContent(
@@ -127,18 +122,19 @@ class VariantController extends Controller
      *                 @OA\Property(property="handle", type="array", @OA\Items(type="string", example="The handle field is required."))
      *             )
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
-    public function store(StoreVariantRequest $request, $productId)
+    public function store(StoreVariantRequest $request)
     {
         $validated = $request->validated();
 
-        $variant = Variant::create([
-            'product_id' => $productId,
-            'handle' => $validated['handle'],
-            'price' => $validated['price'],
-        ]);
+        $variant = Variant::create($validated);
 
         return response()->json([
             'message' => 'Variant created successfully',
@@ -170,7 +166,15 @@ class VariantController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Variant not found"
+     *         description="Variant not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Variant not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
@@ -213,7 +217,10 @@ class VariantController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Variant not found"
+     *         description="Variant not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Variant not found")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=422,
@@ -227,6 +234,11 @@ class VariantController extends Controller
      *                 @OA\Property(property="price", type="array", @OA\Items(type="string", example="The price must be a positive number."))
      *             )
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */
@@ -263,7 +275,15 @@ class VariantController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Variant not found"
+     *         description="Variant not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Variant not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Too Many Attempts",
+     *         @OA\JsonContent()
      *     )
      * )
      */

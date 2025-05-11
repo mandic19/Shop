@@ -23,7 +23,7 @@ Route::middleware(['api', 'throttle:3,1'])->group(function () {
 
     // Variant Routes
     Route::get('/variants', [VariantController::class, 'index']);
-    Route::post('/products/{product_id}/variants', [VariantController::class, 'store']);
+    Route::post('/variants', [VariantController::class, 'store']);
     Route::get('/variants/{id}', [VariantController::class, 'show']);
     Route::put('/variants/{id}', [VariantController::class, 'update']);
     Route::delete('/variants/{id}', [VariantController::class, 'destroy']);
